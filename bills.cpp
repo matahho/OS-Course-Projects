@@ -2,8 +2,7 @@
 #include <vector>
 #include "csvReader.h"
 
-#define FIRST 1 
-#define SECOND 2 
+
 #define HOURSOFDAY 6
 
 

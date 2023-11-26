@@ -1,54 +1,85 @@
 
 #include <string>
+#include <vector>
 #include <stdio.h>
+#include <iostream>
 #include <stdlib.h>
 #include <unistd.h>
 
+#define ELECFILE "Electricity"
+#define GASFILE "Gas"
+#define WATERFILE "Water" 
+#define NUMBER_OF_RESOURCE 3
+
+
+
 using namespace std;
 
+
 int main(int argc , char* argv[]) {
-    int pipe_fd[2];
+    int pipe_fd[3][2];
 
-    // Create a pipe
-    if (pipe(pipe_fd) == -1) {
-        perror("Pipe creation failed");
-        exit(EXIT_FAILURE);
+    vector<string> resourceNames =  {ELECFILE, GASFILE, WATERFILE};
+
+    
+
+    for (int i=0 ; i < NUMBER_OF_RESOURCE ; i++){
+
+        // Create a pipe
+        if (pipe(pipe_fd[i]) == -1) {
+            perror("Pipe creation failed");
+            exit(EXIT_FAILURE);
+        }
+
+        pid_t pid = fork();
+
+
+        if (pid == -1) {
+            perror("Fork failed");
+            exit(EXIT_FAILURE);
+        }
+
+        if (pid == 0) {
+            // Child process
+
+            // Close the write end of the pipe
+            close(pipe_fd[i][0]);
+
+            // Redirect standard input to read from the pipe
+            dup2(pipe_fd[i][1], STDOUT_FILENO);
+
+            string filePath = string(argv[1]) + "/" + resourceNames[i] + ".csv";
+            char * command [] = {"./bills.out" , const_cast<char*>(filePath.c_str()) , NULL};
+
+            
+            execvp(command[0] , command);
+
+            // If execl fails
+            perror("Exec failed");
+            exit(EXIT_FAILURE);
+        }
+
+        else {
+
+            close(pipe_fd[i][1]);
+            char val[1024];
+            ssize_t bytesRead;
+
+            
+            while ((bytesRead = read(pipe_fd[i][0], val, sizeof(val) - 1)) > 0) {
+                val[bytesRead] = '\0';  // Null-terminate the string
+                printf("%s", val);
+                cout << endl;
+            }
+
+            close(pipe_fd[i][0]);
+
+        }
+
+
     }
 
-    pid_t pid = fork();
 
-
-    if (pid == -1) {
-        perror("Fork failed");
-        exit(EXIT_FAILURE);
-    }
-
-    if (pid == 0) {
-        // Child process
-
-        // Close the write end of the pipe
-        close(pipe_fd[0]);
-
-        // Redirect standard input to read from the pipe
-        dup2(pipe_fd[1], STDOUT_FILENO);
-
-        
-        char * command [] = {"./bills.out" , argv[1] , argv[2] , NULL};
-        execvp(command[0] , command);
-
-        // If execl fails
-        perror("Exec failed");
-        exit(EXIT_FAILURE);
-    } else {
-
-        close(pipe_fd[1]);
-		char val [1024];
-        read(pipe_fd[0] , &val , sizeof(val));
-
-		printf("%s" , val);
-
-        close(pipe_fd[0]);
-    }
 
     return 0;
 }

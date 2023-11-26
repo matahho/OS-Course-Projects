@@ -92,7 +92,7 @@ int main (int argc , char* argv[]){
                 dup2(pipe_fd[1], STDOUT_FILENO);
 
                 string s = allBuildingPath+input+".csv";
-                char * command [] = {const_cast<char*>("./building.out"),const_cast<char*>(s.c_str()),  const_cast<char*>("1") , NULL};
+                char * command [] = {const_cast<char*>("./building.out"),const_cast<char*>(s.c_str()), NULL};
                 execvp(command[0] , command);
 
                 // If execl fails
