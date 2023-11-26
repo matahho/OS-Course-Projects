@@ -12,6 +12,23 @@
 #define NUMBER_OF_RESOURCE 3
 
 
+// struct ReduceText
+// {
+//     string name;
+//     int year;
+//     int month;
+//     int peakHour;
+//     int usageInPeadHour;
+//     int totalUsage;
+
+// };
+
+
+// ReduceText reduceWorker (string text){
+    
+// }
+
+
 
 using namespace std;
 
@@ -20,7 +37,7 @@ int main(int argc , char* argv[]) {
     int pipe_fd[3][2];
 
     vector<string> resourceNames =  {ELECFILE, GASFILE, WATERFILE};
-
+    vector<string> reducedText ;
     
 
     for (int i=0 ; i < NUMBER_OF_RESOURCE ; i++){
@@ -68,8 +85,7 @@ int main(int argc , char* argv[]) {
             
             while ((bytesRead = read(pipe_fd[i][0], val, sizeof(val) - 1)) > 0) {
                 val[bytesRead] = '\0';  // Null-terminate the string
-                printf("%s", val);
-                cout << endl;
+                reducedText.push_back(string(val));
             }
 
             close(pipe_fd[i][0]);
@@ -80,6 +96,11 @@ int main(int argc , char* argv[]) {
     }
 
 
+
+
+
+
+    
 
     return 0;
 }
