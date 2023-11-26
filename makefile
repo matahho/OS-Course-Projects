@@ -1,7 +1,7 @@
 CC = g++ -std=c++17
 
 
-building.out: bills.out
+building.out: bills.out building.cpp
 	$(CC) building.cpp -o building.out
 
 
@@ -14,7 +14,7 @@ csvReader.o: csvReader.cpp csvReader.h
 bills.out: bills.o csvReader.o
 	$(CC) bills.o csvReader.o -o bills.out
 
-main.out: main.cpp
+main.out: main.cpp bills.out building.out
 	$(CC) main.cpp -o main.out
 
 .PHONY: clean

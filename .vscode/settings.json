@@ -4,6 +4,8 @@
         "chrono": "cpp",
         "string": "cpp",
         "iosfwd": "cpp",
-        "filesystem": "cpp"
+        "filesystem": "cpp",
+        "iostream": "cpp",
+        "istream": "cpp"
     }
 }

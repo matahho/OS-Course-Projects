@@ -18,6 +18,6 @@ struct Record {
 
 vector<Record> readCsvFile(string path);
 
-pair<vector<Record>, vector<Record> > separateByMonth(const vector<Record>& records);
+vector<vector<Record> > separateByMonth(const vector<Record>& records);
 
 #endif 

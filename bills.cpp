@@ -35,6 +35,7 @@ int findHighestHour (vector<int> sums){
 }
 
 MonthlyReport MonthlyCalculation (vector<Record> r){
+
     MonthlyReport m1;
 
     m1.year = r[0].year;
@@ -54,19 +55,18 @@ MonthlyReport MonthlyCalculation (vector<Record> r){
 }
 int main(int argc , char* argv[]) {
     string path = argv[1] ;
+
     vector<Record> allRecords = readCsvFile(path);
-    vector<Record> m1 = separateByMonth(allRecords).first;
-    vector<Record> m2 = separateByMonth(allRecords).second;
+
+    vector<vector<Record> > m1 = separateByMonth(allRecords);
 
 
-    MonthlyReport m1report = MonthlyCalculation(m1);
-    MonthlyReport m2report = MonthlyCalculation(m2);
+
+    MonthlyReport m1report [12];
+    for (int i=0 ; i < 12 ; i++){
         
+        m1report[i] = MonthlyCalculation(m1[i]);
+        printf("%d-%d %d %d %d\n" , m1report[i].year , m1report[i].month , m1report[i].highHour , m1report[i].sumHighHour , m1report[i].total);
+    }
 
-    //if(m1report.month == stoi(argv[2]))
-    printf("%d-%d %d %d %d\n" , m1report.year , m1report.month , m1report.highHour , m1report.sumHighHour , m1report.total);
-    //else if (m2report.month == stoi(argv[2]))
-    printf("%d-%d %d %d %d\n" , m2report.year , m2report.month , m2report.highHour , m2report.sumHighHour , m2report.total);
-    // else 
-    //     printf ("ERROR : report not found\n");
 }

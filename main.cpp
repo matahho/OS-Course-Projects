@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <sstream>
 
 #define INUPUT_SIZE 512 
 
@@ -26,13 +27,32 @@ void listBuildings (string allBuildingPath){
 
 
 
-string getRequestInfo (){
-    string com , name ;
-    cout << "Enter Comodity(gas/water/elec):\n";
-    cin >> com;
-    cout << "Enter Building name:\n";
-    cin >> name;
-    return "/"+ name + "/" + com; 
+vector<string> getRequestInfo (){
+    vector<string> com , names;
+
+    string line;
+    
+    cout << "Enter Commodities (Gas/Water/Electricity/exit):" << endl;   
+    while (cin >> line){
+        if (line == "exit")
+            break;
+        else 
+            com.push_back(line);
+    }
+    cout << "Enter Building Name (exit):" << endl;
+    while (cin >> line){
+        if (line == "exit")
+            break;
+        else 
+            names.push_back(line);
+    }
+
+    vector<string> all;
+    for (auto n : names)
+        for (auto c : com)
+            all.push_back("/"+n+"/"+c);
+
+    return all;
 }
 
 
@@ -47,7 +67,7 @@ int main (int argc , char* argv[]){
         if (input == "list")
             listBuildings(allBuildingPath);
         if (input == "report"){
-            input = getRequestInfo();
+            vector<string>reqInfo = getRequestInfo();
             int pipe_fd[2];
 
             // Create a pipe

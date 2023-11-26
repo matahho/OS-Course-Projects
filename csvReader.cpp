@@ -45,18 +45,13 @@ vector<Record> readCsvFile(string path) {
 }
 
 
-pair<vector<Record>, vector<Record> > separateByMonth(const vector<Record>& records) {
-    vector<Record> januaryRecords;
-    vector<Record> februaryRecords;
+vector<vector<Record> > separateByMonth(const vector<Record>& records) {
 
-    for (const auto& record : records) {
-        if (record.month == 1) {
-            januaryRecords.push_back(record);
-        } else if (record.month == 2) {
-            februaryRecords.push_back(record);
+    vector<vector<Record> > months(12); // Initialize with 12 empty vectors
+
+        for (const auto& record : records) {
+            months[record.month - 1].push_back(record); // Adjust for 0-based indexing
         }
-        // You can add more conditions for other months if needed
-    }
 
-    return make_pair(januaryRecords, februaryRecords);
+        return months;
 }
