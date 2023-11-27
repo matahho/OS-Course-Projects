@@ -16,10 +16,11 @@
 std::vector<std::string> getAllDirectories(std::string path);
 
 
-std::string fifoFileName (std::string path , std::string builingName, std::string com);
+std::string fifoFileName (std::string path , std::string builingName);
 
 
-void makingFifos(std::vector<std::string>allBuilingName , std::vector<std::string>allComodityName , std::vector<std::string> &fifos);
+void makingFifos(std::vector<std::string>allBuilingName , std::vector<std::string> &fifos);
 
+void getFifosNames(std::vector<std::string>allBuilingName , std::vector<std::string> &fifos);
 
 #endif 

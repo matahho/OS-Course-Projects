@@ -3,7 +3,7 @@ CC = g++ -std=c++17
 all: main.out office.out building.out bills.out
 
 building.out: building.cpp
-	$(CC) building.cpp -o building.out
+	$(CC) building.cpp utils.o -o building.out
 
 bills.o: bills.cpp csvReader.o
 	$(CC) -c bills.cpp -o bills.o
@@ -14,8 +14,8 @@ csvReader.o: csvReader.cpp csvReader.h
 bills.out: bills.o csvReader.o
 	$(CC) bills.o csvReader.o -o bills.out
 
-main.out: main.cpp bills.out building.out
-	$(CC) main.cpp -o main.out
+main.out: main.cpp bills.out building.out utils.o
+	$(CC) main.cpp utils.o -o main.out
 
 utils.o: utils.cpp utils.h
 	$(CC) -c utils.cpp -o utils.o
