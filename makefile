@@ -2,7 +2,7 @@ CC = g++ -std=c++17
 
 all: main.out office.out building.out bills.out
 
-building.out: building.cpp
+building.out: building.cpp utils.o
 	$(CC) building.cpp utils.o -o building.out
 
 bills.o: bills.cpp csvReader.o

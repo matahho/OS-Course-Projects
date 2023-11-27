@@ -87,8 +87,6 @@ vector<BuildingRecord> parseMessage(string message, string name) {
 
         buildingRecords.push_back(record);
     }
-
-    return buildingRecords;
 }
 
 string createMessageFromRecords(vector<BuildingRecord> records){
@@ -140,6 +138,7 @@ vector<BuildingRecord> handlePipeData(pair<int , string> pairFdName , vector<Rec
 }
 
 
+
 int main(int argc , char* argv[]){
     string officeCsvPath = argv[1] + string("/bills.csv");
     vector<Record> taxes = readCsvFile(officeCsvPath);
@@ -188,6 +187,6 @@ int main(int argc , char* argv[]){
     }
 
 
-
+   
 
 }

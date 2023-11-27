@@ -150,7 +150,7 @@ int main(int argc , char* argv[]) {
     }
     string all;
     for (int i=0 ; i<resourceNames.size() ; i++){
-        all = all+ resourceNames[i]+"\n"+reducedText[i];
+        all = all+argv[2]+"\n"+ resourceNames[i]+"\n"+reducedText[i];
     }
     printf("%s" , all.c_str());
     //sendDataToOffice(all , argv[1] , argv[2]);

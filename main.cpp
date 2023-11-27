@@ -6,6 +6,7 @@
 #include <unistd.h>
 #include <sstream>
 #include "utils.h"
+#include <iomanip>
 
 #define INUPUT_SIZE 512
 #define ELECFILE "Electricity"
@@ -24,23 +25,81 @@
 
 using namespace std;
 
+struct BuildingRecord{
+    string name ;
+    string comodity;
+    int year;
+    int month;
+    int peakHour;
+    int usageInPeakHour;
+    int totalUsage;
+    int payment;
+};
 
-// void listBuildings (string allBuildingPath){
-//     pid_t pid = fork();
-//     if (pid == -1) {
-//         perror("fork");
-//         exit(EXIT_FAILURE);
-//     } else if (pid == 0) { 
-//         execl("/bin/ls", "ls", "-1", allBuildingPath.c_str(), (char *)0);
-//         perror("execl");
-//         exit(EXIT_FAILURE);
-//     } else 
-//         waitpid(pid, nullptr, 0);
+
+
+
+vector<BuildingRecord> parseAllInformation (vector<string> allvec , vector<string> allBuildings){
+    string all;
+    for (int j=0 ; j < allvec.size() ;j++)
+        all += allvec[j];
+    stringstream iss(all);
+    vector<BuildingRecord> buildingRecords;
+
+    string line;
+    string resource; 
+    string name;
+
+    while (std::getline(iss, line)) {
+        for (int t=0 ; t < allBuildings.size() ;t++)
+            if (line == allBuildings[t]){
+                name = line;
+                break;
+            }
         
-// }
+        if (line == "Electricity" || line == "Gas" || line == "Water") {
+            resource = line;
+            continue; 
+        }
 
+        BuildingRecord record;
+        istringstream lineStream(line);
 
+        lineStream >> record.year >> record.month >> record.peakHour >> record.usageInPeakHour >> record.totalUsage;
+        record.month = -record.month;
+        record.comodity = resource;  // Set the resource from the first line
+        record.name = name;
 
+        buildingRecords.push_back(record);
+    }
+    return buildingRecords;
+}
+
+void showDesieard(const std::vector<BuildingRecord>& recs, const std::vector<std::string>& reqs) {
+    std::cout << RED
+              << std::setw(15) << "Name"
+              << std::setw(15) << "Resource"
+              << std::setw(15) << "Date"
+              << std::setw(15) << "PeakHour"
+              << std::setw(20) << "UsageInPeakHour"
+              << std::setw(15) << "TotalUsage"
+              << std::setw(15) << "Payment"
+              << RESET << std::endl;
+
+    for (const auto& req : reqs) {
+        for (const auto& rec : recs) {
+            if (("/" + rec.name + "/" + rec.comodity) == req) {
+                std::cout << std::setw(15) << rec.name
+                          << std::setw(10) << rec.comodity
+                          << std::setw(20) << rec.year << "-" << rec.month
+                          << std::setw(10) << rec.peakHour
+                          << std::setw(20) << rec.usageInPeakHour
+                          << std::setw(15) << rec.totalUsage
+                          << std::endl;
+            }
+        }
+    }
+}
 
 
 void listBuildings (string allBuildingPath){
@@ -58,14 +117,14 @@ vector<string> getRequestInfo (){
     
     cout << "Enter Commodities (Gas/Water/Electricity/exit):" << endl;   
     while (cin >> line){
-        if (line == "ex")
+        if (line == "exit")
             break;
         else 
             com.push_back(line);
     }
     cout << "Enter Building Name (exit):" << endl;
     while (cin >> line){
-        if (line == "ex")
+        if (line == "exit")
             break;
         else 
             names.push_back(line);
@@ -123,6 +182,15 @@ pid_t createOfficeProcess(const std::string& allBuildingPath , string &reducedTe
     }
 
     return pid;
+}
+
+void unlinkAllFifos(vector<string> &fifos){
+    for (auto receiver : fifos){
+        if (unlink(receiver.c_str()) == -1) {
+                perror("Error unlinking FIFO");
+                exit(EXIT_FAILURE);
+            }
+    }
 }
 
 
@@ -200,7 +268,11 @@ int main (int argc , char* argv[]){
         }
     }   
 
-    cout << "REduces";
-    for (auto i :reducedText)
-        cout << i << endl;
+
+    vector<BuildingRecord> allInfos = parseAllInformation(reducedText , allBuildingNames);
+
+    showDesieard(allInfos , reqInfo);
+
+    unlinkAllFifos(fifos);
+
 }
