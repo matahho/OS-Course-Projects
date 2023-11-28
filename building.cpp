@@ -34,10 +34,8 @@ int findFifoIndex (vector<string>fifos , string name){
 
 
 void sendDataToOffice(string message , string AllBuildingPath , string BuildingName){
-    vector<string>fifos;
-    getFifosNames (getAllDirectories(AllBuildingPath) , fifos);
-    //makingFifos( getAllDirectories(AllBuildingPath) , fifos);
-    
+
+
     int fd = open(("/tmp/"+BuildingName).c_str(), O_WRONLY);
     if (fd != -1) {
         write(fd, message.c_str(), message.size());
@@ -46,7 +44,6 @@ void sendDataToOffice(string message , string AllBuildingPath , string BuildingN
     } else {
         perror("Failed to open FIFO for writing");
     }
-
     
 }
 
@@ -77,7 +74,7 @@ std::string receiveResponseFromOffice(const std::string& buildingName) {
 
     buffer[bytesRead] = '\0';
 
-    close(fd1); // Close the file descriptor after reading
+    close(fd1); 
 
     return std::string(buffer);
 }
@@ -150,10 +147,12 @@ int main(int argc , char* argv[]) {
     }
     string all;
     for (int i=0 ; i<resourceNames.size() ; i++){
-        all = all+argv[2]+"\n"+ resourceNames[i]+"\n"+reducedText[i];
+        all = all+ resourceNames[i]+"\n"+reducedText[i];
     }
+
     printf("%s" , all.c_str());
-    //sendDataToOffice(all , argv[1] , argv[2]);
+    
+    sendDataToOffice(all , argv[1] , argv[2]);
 
     //cout << receiveResponseFromOffice(string(argv[2]));
     

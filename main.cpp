@@ -138,7 +138,11 @@ vector<string> getRequestInfo (){
     return all;
 }
 
-pid_t createOfficeProcess(const std::string& allBuildingPath , string &reducedTest) {
+pid_t createOfficeProcess(const string& allBuildingPath , vector<string> &reqInfos, vector<string> &reducedTest ) {
+    string reqs;
+    for (auto txt: reqInfos)
+        reqs += txt + " ";
+    
     int pipe_fd[2];
 
     // Create a pipe for communication between main and office process
@@ -155,30 +159,35 @@ pid_t createOfficeProcess(const std::string& allBuildingPath , string &reducedTe
     }
 
     if (pid == 0) {
-        close(pipe_fd[1]);
+        close(pipe_fd[0]);
 
 
-        dup2(pipe_fd[0], STDOUT_FILENO);
+        dup2(pipe_fd[1], STDOUT_FILENO);
 
         
-        execl("./office.out", "./office.out", allBuildingPath.c_str(), nullptr);
+        char* command[] = {"./office.out", const_cast<char*>(allBuildingPath.c_str()) , const_cast<char*>(reqs.c_str()) , NULL};
+
+        execvp(command[0], command);
+
 
 
         perror("Exec failed");
         exit(EXIT_FAILURE);
     } else {
 
-
             close(pipe_fd[1]);
-            char val[2048];
+            char val[1024];
             ssize_t bytesRead;
 
             while ((bytesRead = read(pipe_fd[0], val, sizeof(val) - 1)) > 0) {
-                val[bytesRead] = '\0'; 
-                reducedTest += string(val);
-            }
+                val[bytesRead] = '\0' ;
+                reducedTest.push_back(string(val));
             
-        close(pipe_fd[0]);
+                
+            }
+            // Close the read end of the pipe in the parent
+            close(pipe_fd[0]);
+            waitpid(pid, NULL, 0);
     }
 
     return pid;
@@ -204,6 +213,7 @@ int main (int argc , char* argv[]){
     makingFifos(allBuildingNames , fifos);
     listBuildings(allBuildingPath);
     vector<string> reducedText ;
+    vector<string> reducedPayment ;
 
     
     vector<string>reqInfo = getRequestInfo();
@@ -211,7 +221,7 @@ int main (int argc , char* argv[]){
     
     
     
-    //pid_t officePid = createOfficeProcess(allBuildingPath , reducedText );
+    //pid_t officePid = createOfficeProcess(allBuildingPath ,reqInfo,reducedPayment);
     
     
     
@@ -236,7 +246,7 @@ int main (int argc , char* argv[]){
             // Child process
 
             // Close the write end of the pipe in the child
-            close(pipe_fd[i][0]);
+            //close(pipe_fd[i][0]);
 
             // Redirect standard input to read from the pipe
             dup2(pipe_fd[i][1], STDOUT_FILENO);
@@ -264,7 +274,7 @@ int main (int argc , char* argv[]){
             }
             // Close the read end of the pipe in the parent
             close(pipe_fd[i][0]);
-            waitpid(pid, NULL, 0);
+            //waitpid(pid, NULL, 0);
         }
     }   
 
@@ -272,7 +282,10 @@ int main (int argc , char* argv[]){
     vector<BuildingRecord> allInfos = parseAllInformation(reducedText , allBuildingNames);
 
     showDesieard(allInfos , reqInfo);
-
+    sleep(100);
     unlinkAllFifos(fifos);
+
+
+
 
 }

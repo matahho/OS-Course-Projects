@@ -87,12 +87,13 @@ vector<BuildingRecord> parseMessage(string message, string name) {
 
         buildingRecords.push_back(record);
     }
+    return buildingRecords;
 }
 
 string createMessageFromRecords(vector<BuildingRecord> records){
     string text ;
     for (auto r:records)
-        text += r.name + " " + r.comodity + " " + to_string(r.year) + "-" + to_string(r.month) + " " + to_string(r.peakHour) + " " + to_string(r.usageInPeakHour) + " " + to_string(r.totalUsage) + " " + to_string(r.payment) + "\n"; 
+        text += r.name + " " + r.comodity + " " + to_string(r.year) + "-" + to_string(r.month) + " " + to_string(r.payment) + "\n"; 
     return text;
 }
 
@@ -111,31 +112,54 @@ void addPipesFds(vector<string> fifos , vector<pair<int , string>>&pipefds){
 
 }
 
+vector<pair<string , string>> separateRequests (string reqs){
+    istringstream iss(reqs);
+    vector<pair<string , string>> tokens;
+
+    do {
+        string word;
+        iss >> word;
+        istringstream iss(word);
+        string name, comodity;
+
+        getline(iss, name, '/');
+        getline(iss, comodity, '/');
 
 
+        tokens.push_back(make_pair(name , comodity));
 
-vector<BuildingRecord> handlePipeData(pair<int , string> pairFdName , vector<Record> &taxes) {
-    char buffer[1024];
-    ssize_t bytesRead = read(pairFdName.first , buffer, sizeof(buffer) - 1);
-    if (bytesRead == -1) {
-        perror("Error reading from pipe");
-        exit(EXIT_FAILURE);
-    } else if (bytesRead == 0) {
-        cerr << "Pipe closed" << endl;
-        close(pairFdName.first);
-        exit(EXIT_SUCCESS);
-    }
+    } while (iss);
 
-    buffer[bytesRead] = '\0';
-    vector<BuildingRecord> buildingRecords = parseMessage(buffer , pairFdName.second);
-    calculatePayment(buildingRecords , taxes );
-    
+    return tokens;
 
-    cout << YELLOW <<"RECEIVED data from building" << RESET << endl;
-    
-    return buildingRecords;
-    
 }
+
+
+
+
+
+void readFromAPipe(vector<Record> taxes , vector< pair<string , string> > reqs ){
+    for (auto req: reqs){
+        int fd = open(("/tmp/"+req.first).c_str(), O_RDONLY);
+        char val[1024];
+        ssize_t bytesRead;
+
+        while ((bytesRead = read(fd, val, sizeof(val) - 1)) > 0)
+            val[bytesRead] = '\0'; 
+        close(fd);
+        
+        vector<BuildingRecord>records =  parseMessage(val , req.first);
+        vector<BuildingRecord> result ;
+        for (auto rec : records)
+            if (rec.comodity == req.second)
+                result.push_back(rec);
+        calculatePayment(result , taxes);
+        for (auto a :result)
+            cout << a.name << " " << a.comodity << " " << a.month << " " << a.totalUsage << " " << a.payment << endl;
+    }
+    
+}  
+
 
 
 
@@ -143,50 +167,16 @@ int main(int argc , char* argv[]){
     string officeCsvPath = argv[1] + string("/bills.csv");
     vector<Record> taxes = readCsvFile(officeCsvPath);
     string builingPath = string(argv[1]);
+    vector< pair<string , string> > seperated = {make_pair("Jeff" , "Gas") ,make_pair("Mamad" , "Gas") , }  ;//separateRequests(requests);
     vector<string> fifos;
-    //makingFifos(getAllDirectories(string(argv[1])) , fifos);
     getFifosNames( getAllDirectories(string(argv[1])) , fifos);
     vector<pair<int , string>> pipefds;
     addPipesFds(fifos , pipefds);
 
 
-    string reducedText ;
-
-    while (true) {
-        fd_set readSet;
-        FD_ZERO(&readSet);
-
-        int maxfd = -1;
-        for (const auto& p : pipefds) {
-            int fd = p.first;
-            FD_SET(fd, &readSet);
-            if (fd > maxfd) {
-                maxfd = fd;
-            }
-        }
-
-        int ready = select(maxfd + 1, &readSet, nullptr, nullptr, nullptr);
-
-        if (ready == -1) {
-            perror("Error in select");
-            exit(EXIT_FAILURE);
-        }
-
-        if (ready > 0) {
-            for (const auto& p : pipefds) {
-                int fd = p.first;
-                if (FD_ISSET(fd, &readSet)) {
-                    string m = createMessageFromRecords( handlePipeData(p, taxes)) +"\n";
-                    printf("%s" , m.c_str());
-                }
-            }
-        }
 
 
-        FD_ZERO(&readSet);
-    }
-
-
-   
-
+    readFromAPipe(taxes , seperated);
+    
+        
 }
