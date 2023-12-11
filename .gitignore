@@ -1,0 +1,14 @@
+# C++ and macOS specific
+*.dSYM/
+*.swp
+.DS_Store
+.idea
+# Build files
+build/
+*.o
+*.out
+*.exe
+
+# Dependency directories
+dependencies/
+
