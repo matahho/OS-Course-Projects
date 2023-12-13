@@ -13,7 +13,7 @@ OUTPUT = Serial.out
 vpath %.cpp $(PATH_SRC)
 vpath %.hpp $(PATH_INC)
 
-OBJS = main.o bmp.o #filter.o
+OBJS = main.o bmp.o filters.o
 
 # ----------------------------------------------------------------------------------------
 
@@ -28,8 +28,8 @@ $(PATH_OBJ)/main.o: main.cpp $(PATH_INC)/bmp.h
 $(PATH_OBJ)/bmp.o: bmp.cpp $(PATH_INC)/bmp.h
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c -o $@ $<
 
-#$(PATH_OBJ)/filter.o: filter.cpp $(PATH_INC)/filter.h $(PATH_INC)/bmp.h
-#	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c -o $@ $<
+$(PATH_OBJ)/filters.o: filters.cpp $(PATH_INC)/filters.h $(PATH_INC)/bmp.h
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c -o $@ $<
 
 # ----------------------------------------------------------------------------------------
 
