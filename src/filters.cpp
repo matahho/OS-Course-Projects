@@ -110,16 +110,44 @@ int filters::kernelSum (std::vector<std::vector <double>>&ker){
             sumation += ker[i][j];
     return sumation;
 }
+void filters::purpleHaze(std::vector<std::vector<double>> &coeffs) {
+    for (int i = 0; i < rows; i++)
+        for (int j = 0; j < cols; j++) {
+            int newRed = coeffs[0][0] * pixels[i][j].red + coeffs[0][1] * pixels[i][j].green + coeffs[0][2] * pixels[i][j].blue;
+            int newGreen = coeffs[1][0] * pixels[i][j].red + coeffs[1][1] * pixels[i][j].green + coeffs[1][2] * pixels[i][j].blue;
+            int newBlue = coeffs[2][0] * pixels[i][j].red + coeffs[2][1] * pixels[i][j].green + coeffs[2][2] * pixels[i][j].blue;
+
+            newRed = clamp(static_cast<unsigned int> (newRed), 0u, 255u);
+            newGreen = clamp(static_cast<unsigned int> (newGreen), 0u, 255u);
+            newBlue = clamp(static_cast<unsigned int> (newBlue), 0u, 255u);
+
+            // Update pixel values after all calculations
+            pixels[i][j].red = newRed;
+            pixels[i][j].green = newGreen;
+            pixels[i][j].blue = newBlue;
+        }
+}
 
 
+void filters::diagonalHatch(int startX , int startY){
+    double slope = static_cast<double>(cols)/static_cast<double>(rows);
+    for (int i = startX ; i < rows ; i++)
+        pixels[i][int(i*slope) + startY] = WITHE;
+}
 
+void filters::threeParallelhatch(){
+    diagonalHatch( 0 , cols);
+    diagonalHatch( 0 , cols/2);
+    diagonalHatch( rows/2 , cols);
 
-
+}
 
 
 std::vector<std::vector<Pixel>> filters::applyFilters() {
     mirror();
     convolution(gaussianBlurKernel);
+    purpleHaze(purpleHazeCoeffs);
+    threeParallelhatch();
     return pixels;
 }
 
