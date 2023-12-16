@@ -143,11 +143,31 @@ void filters::threeParallelhatch(){
 }
 
 
-std::vector<std::vector<Pixel>> filters::applyFilters() {
+std::vector<std::vector<Pixel>> filters::applyFilters(std::vector<double> &exectionTime){
+    //Flip fiter
+    auto start = std::chrono::high_resolution_clock::now();
     mirror();
+    auto stop = std::chrono::high_resolution_clock::now();
+    exectionTime.push_back(std::chrono::duration_cast<std::chrono::microseconds>(stop - start).count());
+
+    //Blur filter
+    start = std::chrono::high_resolution_clock::now();
     convolution(gaussianBlurKernel);
+    stop = std::chrono::high_resolution_clock::now();
+    exectionTime.push_back(std::chrono::duration_cast<std::chrono::microseconds>(stop - start).count());
+
+    //Purple Haze filter
+    start = std::chrono::high_resolution_clock::now();
     purpleHaze(purpleHazeCoeffs);
+    stop = std::chrono::high_resolution_clock::now();
+    exectionTime.push_back(std::chrono::duration_cast<std::chrono::microseconds>(stop - start).count());
+
+    //Hatch filters
+    start = std::chrono::high_resolution_clock::now();
     threeParallelhatch();
+    stop = std::chrono::high_resolution_clock::now();
+    exectionTime.push_back(std::chrono::duration_cast<std::chrono::microseconds>(stop - start).count());
+
     return pixels;
 }
 

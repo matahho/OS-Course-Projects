@@ -7,6 +7,7 @@
 #include "vector"
 #include "bmp.h"
 #include <algorithm>
+#include "chrono"
 
 template <typename T>
 T clamp(T value, T min, T max) {
@@ -21,7 +22,7 @@ T clamp(T value, T min, T max) {
 class filters {
 public:
     filters(std::vector<std::vector<Pixel>>& pixels_ );
-    std::vector<std::vector<Pixel>> applyFilters();
+    std::vector<std::vector<Pixel>> applyFilters(std::vector<double> &exectionTime);
 
 
 
@@ -50,6 +51,7 @@ private:
 
 
     void diagonalHatch(int startX , int startY);
+    
     void threeParallelhatch();
 
 
