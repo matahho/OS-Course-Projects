@@ -1,6 +1,7 @@
 PATH_SRC  = ./src
 PATH_INC  = $(PATH_SRC)/include
 PATH_OBJ  = ./obj
+BMP_FORMAT = *.bmp
 
 CXX      = g++
 CXXFLAGS += -g
@@ -41,3 +42,4 @@ run: ./$(OUTPUT) $(ARGS)
 
 clean:
 	rm -rf $(PATH_OBJ) $(OUTPUT)
+	rm -rf $(BMP_FORMAT)
