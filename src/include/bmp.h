@@ -19,6 +19,10 @@ struct Pixel {
     unsigned int red;
     unsigned int green;
     unsigned int blue;
+    
+    Pixel(unsigned int r, unsigned int g, unsigned int b) : red(r), green(g), blue(b) {} 
+    Pixel() : red(0), green(0), blue(0) {}
+
 };
 
 extern int rows ;
