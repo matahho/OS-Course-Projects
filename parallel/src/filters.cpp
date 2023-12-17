@@ -127,7 +127,7 @@ void filters::convolution(std::vector<std::vector<double>>& ker , int numThreads
         return t_id;
     };
 
-    int rowsPerThread = cols/numThreads;
+    int rowsPerThread = rows/numThreads;
     std::vector<pthread_t> t_ids;
 
 
@@ -139,8 +139,8 @@ void filters::convolution(std::vector<std::vector<double>>& ker , int numThreads
 
     }
     if (cols % numThreads) {
-        int row_begin = (cols - (cols % numThreads));
-        int row_end = cols;
+        int row_begin = (rows - (rows % numThreads));
+        int row_end = rows;
         t_ids.push_back(do_partial(pixels, row_begin, row_end));
     }
     
@@ -210,7 +210,7 @@ void filters::purpleHaze(std::vector<std::vector<double>> &coeffs , int numThrea
         return t_id;
     };
 
-    int rowsPerThread = cols/numThreads;
+    int rowsPerThread = rows/numThreads;
     std::vector<pthread_t> t_ids;
 
 
@@ -222,8 +222,8 @@ void filters::purpleHaze(std::vector<std::vector<double>> &coeffs , int numThrea
 
     }
     if (cols % numThreads) {
-        int row_begin = (cols - (cols % numThreads));
-        int row_end = cols;
+        int row_begin = (rows - (rows % numThreads));
+        int row_end = rows;
         t_ids.push_back(do_partial(pixels, row_begin, row_end));
     }
     
