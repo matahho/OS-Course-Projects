@@ -31,10 +31,13 @@ typedef struct tagBITMAPINFOHEADER {
 
 int rows , cols;
 
-bool fillAndAllocate(std::vector<char>& buffer, const char* fileName, int& rows, int& cols, int& bufferSize) {
-    std::ifstream file(fileName, std::ios::binary);
+
+
+
+bool fillAndAllocate(char*& buffer, const char* fileName, int& rows, int& cols, int& bufferSize) {
+    std::ifstream file(fileName);
     if (!file) {
-        std::cout << "File " << fileName << " doesn't exist!" << std::endl;
+        std::cout << "File" << fileName << " doesn't exist!" << std::endl;
         return false;
     }
 
@@ -42,7 +45,7 @@ bool fillAndAllocate(std::vector<char>& buffer, const char* fileName, int& rows,
     std::streampos length = file.tellg();
     file.seekg(0, std::ios::beg);
 
-    buffer.resize(length);
+    buffer = new char[length];
     file.read(&buffer[0], length);
 
     PBITMAPFILEHEADER file_header;
@@ -52,12 +55,11 @@ bool fillAndAllocate(std::vector<char>& buffer, const char* fileName, int& rows,
     info_header = (PBITMAPINFOHEADER)(&buffer[0] + sizeof(BITMAPFILEHEADER));
     rows = info_header->biHeight;
     cols = info_header->biWidth;
-    bufferSize = static_cast<int>(length);
-
+    bufferSize = file_header->bfSize;
     return true;
 }
 
-std::vector<std::vector<Pixel>> getPixelsFromBMP24(int end, int rows, int cols, const std::vector<char>& fileReadBuffer) {
+std::vector<std::vector<Pixel>> getPixelsFromBMP24(int end, int rows, int cols, char* fileReadBuffer) {
     std::vector<std::vector<Pixel>> pixels ;
     int count = 1;
     int extra = cols % 4;
@@ -91,7 +93,7 @@ std::vector<std::vector<Pixel>> getPixelsFromBMP24(int end, int rows, int cols, 
 
 
 }
-void writeOutBmp24(const std::vector<char>& fileBuffer, const char* nameOfFileToCreate, int bufferSize , std::vector<std::vector<Pixel>> pixels) {
+void writeOutBmp24(char* fileBuffer, const char* nameOfFileToCreate, int bufferSize , std::vector<std::vector<Pixel>> pixels) {
     std::ofstream write(nameOfFileToCreate, std::ios::binary);
     if (!write) {
         std::cout << "Failed to write " << nameOfFileToCreate << std::endl;

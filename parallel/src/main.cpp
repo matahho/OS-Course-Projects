@@ -22,7 +22,7 @@ void executionTimeSheet(std::vector<double> times){
 
 
 int main(int argc, char* argv[]) {
-    std::vector<char> fileBuffer;
+    char* fileBuffer;
     int bufferSize;
     if (!fillAndAllocate(fileBuffer, argv[1], rows, cols, bufferSize)) {
         std::cout << "File read error" << std::endl;
