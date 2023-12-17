@@ -3,10 +3,13 @@
 
 filters::filters(std::vector <std::vector<Pixel>> &pixels_) {
     pixels = pixels_;
+
 }
 void filters::mirror() {
     for (int r=0 ; r < rows/2 ; r++)
         std::swap(pixels[r] , pixels[rows-r-1]);
+
+
     
 }
 
@@ -255,9 +258,10 @@ void filters::threeParallelhatch(){
 
 std::vector<std::vector<Pixel>> filters::applyFilters(std::vector<double> &exectionTime){
     //Flip fiter
+
     
     auto start = std::chrono::high_resolution_clock::now();
-    mirror();
+    //mirror();
     auto stop = std::chrono::high_resolution_clock::now();
     exectionTime.push_back(std::chrono::duration_cast<std::chrono::microseconds>(stop - start).count());
 

@@ -30,15 +30,23 @@ int main(int argc, char* argv[]) {
     }
     std::vector<double> executionTimes;
 
-    // Read input file and fill the pixels vector
+
     auto start = std::chrono::high_resolution_clock::now();
-    std::vector<std::vector<Pixel>> pixels = getPixelsFromBMP24(bufferSize, rows, cols, fileBuffer);
+    std::ifstream input_file(argv[1]);
+    BMP bmp;
+    input_file >> bmp;
+    input_file.close();
+    std::vector<std::vector<Pixel>> pixels = bmp.get_pixels();
     auto stop = std::chrono::high_resolution_clock::now();
     executionTimes.push_back(std::chrono::duration_cast<std::chrono::microseconds>(stop - start).count());
 
 
     filters f = filters(pixels);
     std::vector<std::vector<Pixel>> modified = f.applyFilters(executionTimes);
+
+    bmp.set_pixels(modified);
+    std::cout << modified[0][0].red;
+
 
     // Write output file
     start = std::chrono::high_resolution_clock::now();
