@@ -10,7 +10,7 @@ void filters::mirror() {
     
 }
 
-Pixel filters::kernel(std::vector<std::vector<double>> &ker ,const std::vector<std::vector<Pixel>> &frame){
+Pixel kernel(const std::vector<std::vector<double>> &ker ,const std::vector<std::vector<Pixel>> &frame){
     Pixel result(0 ,0,0);
     if (ker.size() != frame.size()) {
         std::cout << "Error : Kernel Frame does not match to input" << std::endl;
@@ -43,7 +43,7 @@ Pixel filters::kernel(std::vector<std::vector<double>> &ker ,const std::vector<s
 }
 
 
-std::vector<std::vector<Pixel>> filters::submatrix(std::vector<std::vector<Pixel>> &matrix, int x, int y, std::vector<std::vector<double>> &ker) {
+std::vector<std::vector<Pixel>> submatrix(std::vector<std::vector<Pixel>> &matrix, int x, int y, const std::vector<std::vector<double>> &ker) {
     int size = ker.size();
     int picSizeX = matrix.size();
     int picSizeY = matrix[0].size();
@@ -89,21 +89,7 @@ std::vector<std::vector<Pixel>> filters::submatrix(std::vector<std::vector<Pixel
 
 
 
-
-
-void filters::convolution(std::vector<std::vector<double>>& ker ){
-
-
-    for (int i = 0 ; i < rows ; i++)
-        for (int j = 0 ; j < cols ; j++)
-            pixels[i][j] = kernel(ker , submatrix(pixels , i , j , ker));
-
-
-}
-
-
-
-int filters::kernelSum (std::vector<std::vector <double>>&ker){
+int kernelSum (const std::vector<std::vector <double>>&ker){
     int sumation = 0 ;
     for (int i = 0 ; i < ker.size() ; i++)
         for (int j = 0 ; j < ker[i].size() ; j++)
@@ -111,8 +97,70 @@ int filters::kernelSum (std::vector<std::vector <double>>&ker){
     return sumation;
 }
 
+
+void* partialConvolution(void* args) {
+    FilterThreadArgs* args_struct = static_cast<FilterThreadArgs*>(args);
+    auto& startRow = args_struct->startRow;
+    auto& endRow = args_struct->endRow;
+    auto& pixels = args_struct->pixels;
+    auto& original_bmp = args_struct->originalPixels;
+    auto& ker = args_struct->coeffs;
+
+    for (int i = startRow ; i < endRow ; i++)
+        for (int j = 0 ; j < cols ; j++)
+            pixels[i][j] = kernel(ker , submatrix(pixels , i , j , ker));
+
+
+
+
+    return NULL;
+}
+
+
+
+void filters::convolution(std::vector<std::vector<double>>& ker , int numThreads){
+    
+    auto do_partial = [this, &ker](std::vector<std::vector<Pixel>>& pixels, int row_begin, int row_end) {
+        FilterThreadArgs* args = new FilterThreadArgs(pixels,pixels, ker, row_begin, row_end);
+        pthread_t t_id;
+        pthread_create(&t_id, nullptr, partialConvolution , (void*)args);
+        return t_id;
+    };
+
+    int rowsPerThread = cols/numThreads;
+    std::vector<pthread_t> t_ids;
+
+
+    for (int i = 0 ; i < numThreads ; i++)  {
+        int startR = i * rowsPerThread;
+        int endR = (i==(numThreads-1) ? rows :(i + 1) * rowsPerThread);
+        
+        t_ids.push_back(do_partial(pixels , startR , endR));
+
+    }
+    if (cols % numThreads) {
+        int row_begin = (cols - (cols % numThreads));
+        int row_end = cols;
+        t_ids.push_back(do_partial(pixels, row_begin, row_end));
+    }
+    
+    for (auto t_id : t_ids)
+        pthread_join(t_id, NULL);
+
+
+
+}
+
+
+
+
+
+
+
+
+
 void* partialPurpleHaze(void* args) {
-    PurpleHazeThreadArgs* args_struct = static_cast<PurpleHazeThreadArgs*>(args);
+    FilterThreadArgs* args_struct = static_cast<FilterThreadArgs*>(args);
     auto& startRow = args_struct->startRow;
     auto& endRow = args_struct->endRow;
     auto& pixels = args_struct->pixels;
@@ -155,7 +203,7 @@ void* partialPurpleHaze(void* args) {
 void filters::purpleHaze(std::vector<std::vector<double>> &coeffs , int numThreads) {
 
     auto do_partial = [this, &coeffs](std::vector<std::vector<Pixel>>& pixels, int row_begin, int row_end) {
-        PurpleHazeThreadArgs* args = new PurpleHazeThreadArgs(pixels,pixels, coeffs, row_begin, row_end);
+        FilterThreadArgs* args = new FilterThreadArgs(pixels,pixels, coeffs, row_begin, row_end);
 
         pthread_t t_id;
         pthread_create(&t_id, nullptr, partialPurpleHaze, (void*)args);
@@ -215,7 +263,7 @@ std::vector<std::vector<Pixel>> filters::applyFilters(std::vector<double> &exect
 
     //Blur filter
     start = std::chrono::high_resolution_clock::now();
-    convolution(gaussianBlurKernel);
+    convolution(gaussianBlurKernel , 8);
     stop = std::chrono::high_resolution_clock::now();
     exectionTime.push_back(std::chrono::duration_cast<std::chrono::microseconds>(stop - start).count());
 

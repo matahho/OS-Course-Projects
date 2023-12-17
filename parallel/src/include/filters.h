@@ -20,14 +20,14 @@ T clamp(T value, T min, T max) {
 
 
 
-struct PurpleHazeThreadArgs {
-    PurpleHazeThreadArgs(std::vector<std::vector<Pixel>>& pixels_,const std::vector<std::vector<Pixel>>& originalPixels_,const std::vector<std::vector<double>>& coeffs_, int startRow_, int endRow_)
+struct FilterThreadArgs {
+    FilterThreadArgs(std::vector<std::vector<Pixel>>& pixels_,const std::vector<std::vector<Pixel>>& originalPixels_,const std::vector<std::vector<double>>& coeffs_, int startRow_, int endRow_)
     :pixels(pixels_),
     originalPixels(originalPixels_),
     coeffs(coeffs_),
     startRow(startRow_),
     endRow(endRow_) {}
-    
+
     int startRow;
     int endRow;
     std::vector<std::vector<Pixel>> &pixels;
@@ -37,30 +37,32 @@ struct PurpleHazeThreadArgs {
 
 
 
+int kernelSum (const std::vector<std::vector <double>>&ker);
+Pixel kernel(std::vector<std::vector<double>>& ker ,const std::vector<std::vector<Pixel>>& frame);
+int kernelSum (std::vector<std::vector <double>>&ker);
+std::vector<std::vector<Pixel>> submatrix (std::vector<std::vector<Pixel>> &matrix , int x , int y ,std::vector<std::vector<double>> &kernel);
+
+
 class filters {
 public:
     filters(std::vector<std::vector<Pixel>>& pixels_ );
     std::vector<std::vector<Pixel>> applyFilters(std::vector<double> &exectionTime);
-    std::vector<std::vector<Pixel>> pixels;
+
 
 
 
 private:
 
     void mirror();
+    std::vector<std::vector<Pixel>> pixels;
 
-    int kernelSum (std::vector<std::vector <double>>&ker);
-    std::vector<std::vector<Pixel>> submatrix (std::vector<std::vector<Pixel>> &matrix , int x , int y ,std::vector<std::vector<double>> &kernel);
+    
+    void convolution(std::vector<std::vector<double>> &kernel , int numThreads);
     std::vector<std::vector<double>> gaussianBlurKernel = {
             {1 , 2 , 1},
             {2 , 4 , 2},
             {1 , 2 , 1}
     };
-
-    void convolution(std::vector<std::vector<double>> &kernel);
-    Pixel kernel(std::vector<std::vector<double>>& ker ,const std::vector<std::vector<Pixel>>& frame);
-
-
 
     void purpleHaze(std::vector<std::vector<double>> &coeffs , int numThreads);
     std::vector<std::vector<double>> purpleHazeCoeffs = {

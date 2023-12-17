@@ -3,11 +3,11 @@ PATH_INC  = $(PATH_SRC)/include
 PATH_OBJ  = ./obj
 BMP_FORMAT = *.bmp
 
-CXX      = g++
+CXX       = g++
 CXXFLAGS += -g
 CPPFLAGS += -std=c++11 -I$(PATH_INC)
 
-OUTPUT = Serial.out
+OUTPUT = Parallel.out
 
 # ----------------------------------------------------------------------------------------
 
