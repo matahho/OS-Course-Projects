@@ -19,15 +19,33 @@ T clamp(T value, T min, T max) {
 
 
 
+
+struct PurpleHazeThreadArgs {
+    PurpleHazeThreadArgs(std::vector<std::vector<Pixel>>& pixels_,const std::vector<std::vector<Pixel>>& originalPixels_,const std::vector<std::vector<double>>& coeffs_, int startRow_, int endRow_)
+    :pixels(pixels_),
+    originalPixels(originalPixels_),
+    coeffs(coeffs_),
+    startRow(startRow_),
+    endRow(endRow_) {}
+    
+    int startRow;
+    int endRow;
+    std::vector<std::vector<Pixel>> &pixels;
+    const std::vector<std::vector<Pixel>> &originalPixels;
+    const std::vector<std::vector<double>> &coeffs;
+};
+
+
+
 class filters {
 public:
     filters(std::vector<std::vector<Pixel>>& pixels_ );
     std::vector<std::vector<Pixel>> applyFilters(std::vector<double> &exectionTime);
+    std::vector<std::vector<Pixel>> pixels;
 
 
 
 private:
-    std::vector<std::vector<Pixel>> pixels;
 
     void mirror();
 
@@ -42,7 +60,9 @@ private:
     void convolution(std::vector<std::vector<double>> &kernel);
     Pixel kernel(std::vector<std::vector<double>>& ker ,const std::vector<std::vector<Pixel>>& frame);
 
-    void purpleHaze(std::vector<std::vector<double>> &coeffs);
+
+
+    void purpleHaze(std::vector<std::vector<double>> &coeffs , int numThreads);
     std::vector<std::vector<double>> purpleHazeCoeffs = {
         {0.16 , 0.5 , 0.16},
         {0.6 , 0.2 , 0.8},

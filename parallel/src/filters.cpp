@@ -1,5 +1,5 @@
 #include "include/filters.h"
-
+#include<unistd.h> 
 
 filters::filters(std::vector <std::vector<Pixel>> &pixels_) {
     pixels = pixels_;
@@ -97,7 +97,7 @@ void filters::convolution(std::vector<std::vector<double>>& ker ){
     for (int i = 0 ; i < rows ; i++)
         for (int j = 0 ; j < cols ; j++)
             pixels[i][j] = kernel(ker , submatrix(pixels , i , j , ker));
-        
+
 
 }
 
@@ -110,23 +110,85 @@ int filters::kernelSum (std::vector<std::vector <double>>&ker){
             sumation += ker[i][j];
     return sumation;
 }
-void filters::purpleHaze(std::vector<std::vector<double>> &coeffs) {
-    for (int i = 0; i < rows; i++)
-        for (int j = 0; j < cols; j++) {
-            int newRed = coeffs[0][0] * pixels[i][j].red + coeffs[0][1] * pixels[i][j].green + coeffs[0][2] * pixels[i][j].blue;
-            int newGreen = coeffs[1][0] * pixels[i][j].red + coeffs[1][1] * pixels[i][j].green + coeffs[1][2] * pixels[i][j].blue;
-            int newBlue = coeffs[2][0] * pixels[i][j].red + coeffs[2][1] * pixels[i][j].green + coeffs[2][2] * pixels[i][j].blue;
 
-            newRed = clamp(static_cast<unsigned int> (newRed), 0u, 255u);
-            newGreen = clamp(static_cast<unsigned int> (newGreen), 0u, 255u);
-            newBlue = clamp(static_cast<unsigned int> (newBlue), 0u, 255u);
+void* partialPurpleHaze(void* args) {
+    PurpleHazeThreadArgs* args_struct = static_cast<PurpleHazeThreadArgs*>(args);
+    auto& startRow = args_struct->startRow;
+    auto& endRow = args_struct->endRow;
+    auto& pixels = args_struct->pixels;
+    auto& original_bmp = args_struct->originalPixels;
+    auto& coeffs = args_struct->coeffs;
+
+
+
+
+    for (int i = startRow; i < endRow; i++) {
+        for (int j = 0; j < cols; j++) {
+
+            int newRed = coeffs[0][0] * pixels[i][j].red +
+                          coeffs[0][1] * pixels[i][j].green +
+                          coeffs[0][2] * pixels[i][j].blue;
+            int newGreen = coeffs[1][0] * pixels[i][j].red +
+                            coeffs[1][1] * pixels[i][j].green +
+                            coeffs[1][2] * pixels[i][j].blue;
+            int newBlue = coeffs[2][0] * pixels[i][j].red +
+                           coeffs[2][1] * pixels[i][j].green +
+                           coeffs[2][2] * pixels[i][j].blue;
+
+            newRed = clamp(static_cast<unsigned int>(newRed), 0u, 255u);
+            newGreen = clamp(static_cast<unsigned int>(newGreen), 0u, 255u);
+            newBlue = clamp(static_cast<unsigned int>(newBlue), 0u, 255u);
 
             // Update pixel values after all calculations
             pixels[i][j].red = newRed;
             pixels[i][j].green = newGreen;
             pixels[i][j].blue = newBlue;
         }
+    }
+
+    return NULL;
 }
+
+
+
+
+void filters::purpleHaze(std::vector<std::vector<double>> &coeffs , int numThreads) {
+
+    auto do_partial = [this, &coeffs](std::vector<std::vector<Pixel>>& pixels, int row_begin, int row_end) {
+        PurpleHazeThreadArgs* args = new PurpleHazeThreadArgs(pixels,pixels, coeffs, row_begin, row_end);
+
+        pthread_t t_id;
+        pthread_create(&t_id, nullptr, partialPurpleHaze, (void*)args);
+        return t_id;
+    };
+
+    int rowsPerThread = cols/numThreads;
+    std::vector<pthread_t> t_ids;
+
+
+    for (int i = 0 ; i < numThreads ; i++)  {
+        int startR = i * rowsPerThread;
+        int endR = (i==(numThreads-1) ? rows :(i + 1) * rowsPerThread);
+        
+        t_ids.push_back(do_partial(pixels , startR , endR));
+
+    }
+    if (cols % numThreads) {
+        int row_begin = (cols - (cols % numThreads));
+        int row_end = cols;
+        t_ids.push_back(do_partial(pixels, row_begin, row_end));
+    }
+    
+    for (auto t_id : t_ids)
+        pthread_join(t_id, NULL);
+
+}
+
+
+
+
+
+
 
 
 void filters::diagonalHatch(int startX , int startY){
@@ -145,6 +207,7 @@ void filters::threeParallelhatch(){
 
 std::vector<std::vector<Pixel>> filters::applyFilters(std::vector<double> &exectionTime){
     //Flip fiter
+    
     auto start = std::chrono::high_resolution_clock::now();
     mirror();
     auto stop = std::chrono::high_resolution_clock::now();
@@ -158,7 +221,7 @@ std::vector<std::vector<Pixel>> filters::applyFilters(std::vector<double> &exect
 
     //Purple Haze filter
     start = std::chrono::high_resolution_clock::now();
-    purpleHaze(purpleHazeCoeffs);
+    purpleHaze(purpleHazeCoeffs , 8);
     stop = std::chrono::high_resolution_clock::now();
     exectionTime.push_back(std::chrono::duration_cast<std::chrono::microseconds>(stop - start).count());
 
