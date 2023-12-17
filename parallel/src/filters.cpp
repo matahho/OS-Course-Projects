@@ -263,13 +263,15 @@ std::vector<std::vector<Pixel>> filters::applyFilters(std::vector<double> &exect
 
     //Blur filter
     start = std::chrono::high_resolution_clock::now();
-    convolution(gaussianBlurKernel , 8);
+    int threadsForConvolution = 8 ;
+    convolution(gaussianBlurKernel , threadsForConvolution);
     stop = std::chrono::high_resolution_clock::now();
     exectionTime.push_back(std::chrono::duration_cast<std::chrono::microseconds>(stop - start).count());
 
     //Purple Haze filter
     start = std::chrono::high_resolution_clock::now();
-    purpleHaze(purpleHazeCoeffs , 8);
+    int threadsForPurpleHaze = 8 ;
+    purpleHaze(purpleHazeCoeffs , threadsForPurpleHaze);
     stop = std::chrono::high_resolution_clock::now();
     exectionTime.push_back(std::chrono::duration_cast<std::chrono::microseconds>(stop - start).count());
 
