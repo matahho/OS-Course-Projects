@@ -1,0 +1,19 @@
+Seyed Mahdi Haji Seyed Hossein
+810100118
+project 3
+
+
+
+Points :
+- multiple sample provided in ./Sample
+- BMP class added in parallel to make it fast .
+- if you make each ./serial or ./parallel and then for serial : ./Serial.out "path/to/input/img" , for parallel : ./Parallel.out "path/to/input/img"
+- ****for some reason you should first open image in photoshop and then save it and then you can input this to program ****
+    - To save two zero bit and the end of .bmp file (open in photoshop and save it )
+- if you run each program you can see detail time for each function
+- mirror in parallel handeled in writing the bmp file (for more accurcy and speed)
+- you can see ratio of speedup :
+    - chmode +x result.sh
+    - ./result.sh
+    - it run 10 time and avarage
+
