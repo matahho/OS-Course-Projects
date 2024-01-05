@@ -138,19 +138,7 @@ vector<string> getRequestInfo (){
     return all;
 }
 
-pid_t createOfficeProcess(const string& allBuildingPath , vector<string> &reqInfos, vector<string> &reducedTest ) {
-    string reqs;
-    for (auto txt: reqInfos)
-        reqs += txt + " ";
-    
-    int pipe_fd[2];
-
-    // Create a pipe for communication between main and office process
-    if (pipe(pipe_fd) == -1) {
-        perror("Pipe creation failed");
-        exit(EXIT_FAILURE);
-    }
-
+pid_t createOfficeProcess(const string& allBuildingPath, vector<string> &reducedTest ) {
     pid_t pid = fork();
 
     if (pid == -1) {
@@ -158,37 +146,13 @@ pid_t createOfficeProcess(const string& allBuildingPath , vector<string> &reqInf
         exit(EXIT_FAILURE);
     }
 
-    if (pid == 0) {
-        close(pipe_fd[0]);
-
-
-        dup2(pipe_fd[1], STDOUT_FILENO);
-
-        
-        char* command[] = {"./office.out", const_cast<char*>(allBuildingPath.c_str()) , const_cast<char*>(reqs.c_str()) , NULL};
+    if (pid == 0) {        
+        char* command[] = {"./office.out", const_cast<char*>(allBuildingPath.c_str()) , NULL};
 
         execvp(command[0], command);
-
-
-
         perror("Exec failed");
         exit(EXIT_FAILURE);
-    } else {
-
-            close(pipe_fd[1]);
-            char val[1024];
-            ssize_t bytesRead;
-
-            while ((bytesRead = read(pipe_fd[0], val, sizeof(val) - 1)) > 0) {
-                val[bytesRead] = '\0' ;
-                reducedTest.push_back(string(val));
-            
-                
-            }
-            // Close the read end of the pipe in the parent
-            close(pipe_fd[0]);
-            waitpid(pid, NULL, 0);
-    }
+    } 
 
     return pid;
 }
@@ -221,69 +185,47 @@ int main (int argc , char* argv[]){
     
     
     
-    //pid_t officePid = createOfficeProcess(allBuildingPath ,reqInfo,reducedPayment);
     
     
     
+    pid_t pid = fork();
+    if (pid == -1) {
+        perror("Fork failed");
+        exit(EXIT_FAILURE);
+    }
+    if (pid == 0) {        
+        char* command[] = {"./office.out", const_cast<char*>(allBuildingPath.c_str()) , NULL};
+
+        execvp(command[0], command);
+        perror("Exec failed");
+        exit(EXIT_FAILURE);
+    } 
     
-    
-    int pipe_fd[allBuildingNames.size()][2];
     for (int i = 0; i < allBuildingNames.size(); i++) {
-        // Create a pipe
-        if (pipe(pipe_fd[i]) == -1) {
-            perror("Pipe creation failed");
-            exit(EXIT_FAILURE);
-        }
-
         pid_t pid = fork();
-
         if (pid == -1) {
             perror("Fork failed");
             exit(EXIT_FAILURE);
         }
-
         if (pid == 0) {
-            // Child process
-
-            // Close the write end of the pipe in the child
-            //close(pipe_fd[i][0]);
-
-            // Redirect standard input to read from the pipe
-            dup2(pipe_fd[i][1], STDOUT_FILENO);
-
-            
-
             char* command[] = {"./building.out", const_cast<char*>(allBuildingPath.c_str()), const_cast<char*>(allBuildingNames[i].c_str()), NULL};
-
             execvp(command[0], command);
-
-            // If execl fails
             perror("Exec failed");
             exit(EXIT_FAILURE);
-        } else {
-            // Parent process
-            close(pipe_fd[i][1]);
-            char val[1024];
-            ssize_t bytesRead;
-
-            while ((bytesRead = read(pipe_fd[i][0], val, sizeof(val) - 1)) > 0) {
-                val[bytesRead] = '\0';  // Null-terminate the string
-                reducedText.push_back(string(val));
-            
-                
-            }
-            // Close the read end of the pipe in the parent
-            close(pipe_fd[i][0]);
-            //waitpid(pid, NULL, 0);
         }
     }   
+
+    
+
+
+    //pid_t officePid = createOfficeProcess(allBuildingPath ,reqInfo,reducedPayment);
 
 
     vector<BuildingRecord> allInfos = parseAllInformation(reducedText , allBuildingNames);
 
     showDesieard(allInfos , reqInfo);
-    sleep(100);
-    unlinkAllFifos(fifos);
+    waitpid(pid , NULL , 0);
+    //unlinkAllFifos(fifos);
 
 
 

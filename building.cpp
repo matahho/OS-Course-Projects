@@ -150,7 +150,7 @@ int main(int argc , char* argv[]) {
         all = all+ resourceNames[i]+"\n"+reducedText[i];
     }
 
-    printf("%s" , all.c_str());
+    //printf("%s" , all.c_str());
     
     sendDataToOffice(all , argv[1] , argv[2]);
 

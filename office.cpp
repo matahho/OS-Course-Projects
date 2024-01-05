@@ -112,35 +112,14 @@ void addPipesFds(vector<string> fifos , vector<pair<int , string>>&pipefds){
 
 }
 
-vector<pair<string , string>> separateRequests (string reqs){
-    istringstream iss(reqs);
-    vector<pair<string , string>> tokens;
-
-    do {
-        string word;
-        iss >> word;
-        istringstream iss(word);
-        string name, comodity;
-
-        getline(iss, name, '/');
-        getline(iss, comodity, '/');
-
-
-        tokens.push_back(make_pair(name , comodity));
-
-    } while (iss);
-
-    return tokens;
-
-}
 
 
 
 
-
-void readFromAPipe(vector<Record> taxes , vector< pair<string , string> > reqs ){
+void readFromAPipe(vector<Record> taxes , vector<string> reqs ){
     for (auto req: reqs){
-        int fd = open(("/tmp/"+req.first).c_str(), O_RDONLY);
+        cout << ("+++/tmp/"+req) << endl ;
+        int fd = open(("/tmp/"+req).c_str(), O_RDONLY);
         char val[1024];
         ssize_t bytesRead;
 
@@ -148,13 +127,10 @@ void readFromAPipe(vector<Record> taxes , vector< pair<string , string> > reqs )
             val[bytesRead] = '\0'; 
         close(fd);
         
-        vector<BuildingRecord>records =  parseMessage(val , req.first);
-        vector<BuildingRecord> result ;
-        for (auto rec : records)
-            if (rec.comodity == req.second)
-                result.push_back(rec);
-        calculatePayment(result , taxes);
-        for (auto a :result)
+        vector<BuildingRecord>records =  parseMessage(val , req);
+
+        calculatePayment(records , taxes);
+        for (auto a :records)
             cout << a.name << " " << a.comodity << " " << a.month << " " << a.totalUsage << " " << a.payment << endl;
     }
     
@@ -167,7 +143,6 @@ int main(int argc , char* argv[]){
     string officeCsvPath = argv[1] + string("/bills.csv");
     vector<Record> taxes = readCsvFile(officeCsvPath);
     string builingPath = string(argv[1]);
-    vector< pair<string , string> > seperated = {make_pair("Jeff" , "Gas") ,make_pair("Mamad" , "Gas") , }  ;//separateRequests(requests);
     vector<string> fifos;
     getFifosNames( getAllDirectories(string(argv[1])) , fifos);
     vector<pair<int , string>> pipefds;
@@ -176,7 +151,7 @@ int main(int argc , char* argv[]){
 
 
 
-    readFromAPipe(taxes , seperated);
+    readFromAPipe(taxes , getAllDirectories(string(argv[1])));
     
         
 }
